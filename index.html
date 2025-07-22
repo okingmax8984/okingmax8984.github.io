@@ -1,1 +1,620 @@
-<p>Hello 大家好</p>
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Solitaire Classic - 酷炫纸牌游戏</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        
+        body {
+            background: linear-gradient(135deg, #1a2a6c, #b21f1f, #2a3a5c);
+            color: white;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            overflow-x: hidden;
+            position: relative;
+        }
+        
+        /* 星空背景效果 */
+        .stars {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: -1;
+        }
+        
+        .star {
+            position: absolute;
+            width: 2px;
+            height: 2px;
+            background-color: white;
+            border-radius: 50%;
+            animation: twinkle 5s infinite ease-in-out;
+        }
+        
+        @keyframes twinkle {
+            0%, 100% { opacity: 0.2; }
+            50% { opacity: 1; }
+        }
+        
+        /* 头部样式 */
+        header {
+            background: rgba(0, 0, 0, 0.7);
+            padding: 15px 5%;
+            backdrop-filter: blur(10px);
+            text-align: center;
+            border-bottom: 1px solid rgba(255, 215, 0, 0.5);
+            position: relative;
+            overflow: hidden;
+        }
+        
+        header::before {
+            content: "";
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255, 215, 0, 0.2), transparent);
+            animation: shimmer 3s infinite;
+        }
+        
+        @keyframes shimmer {
+            0% { transform: translateX(-100%); }
+            100% { transform: translateX(100%); }
+        }
+        
+        h1 {
+            font-size: 2.5rem;
+            margin-bottom: 10px;
+            color: gold;
+            text-shadow: 0 0 10px rgba(255, 215, 0, 0.7);
+            letter-spacing: 2px;
+            position: relative;
+        }
+        
+        .game-info {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 15px 5%;
+            background: rgba(0, 0, 0, 0.5);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+        }
+        
+        .stats {
+            display: flex;
+            gap: 30px;
+            font-size: 1.2rem;
+        }
+        
+        .controls {
+            display: flex;
+            gap: 15px;
+        }
+        
+        button {
+            padding: 10px 20px;
+            background: linear-gradient(45deg, #ff8a00, #ff0066);
+            border: none;
+            color: white;
+            font-weight: bold;
+            border-radius: 50px;
+            cursor: pointer;
+            transition: all 0.3s;
+            box-shadow: 0 4px 15px rgba(255, 0, 102, 0.3);
+        }
+        
+        button:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 6px 20px rgba(255, 0, 102, 0.5);
+        }
+        
+        button:active {
+            transform: translateY(0);
+        }
+        
+        /* 游戏区域 */
+        .game-container {
+            flex-grow: 1;
+            padding: 30px 5%;
+            position: relative;
+        }
+        
+        .game-board {
+            display: flex;
+            flex-direction: column;
+            gap: 25px;
+        }
+        
+        .top-section {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+        
+        .stock {
+            position: relative;
+            width: 120px;
+            height: 160px;
+            perspective: 800px;
+            cursor: pointer;
+        }
+        
+        .card-slot {
+            width: 100px;
+            height: 150px;
+            border: 2px solid rgba(255, 255, 255, 0.3);
+            border-radius: 10px;
+            background: rgba(0, 0, 0, 0.2);
+            position: relative;
+        }
+        
+        .card-slot::after {
+            content: "";
+            position: absolute;
+            top: 10px;
+            left: 10px;
+            right: 10px;
+            bottom: 10px;
+            border: 1px dashed rgba(255, 255, 255, 0.2);
+            border-radius: 8px;
+        }
+        
+        .waste {
+            display: flex;
+            gap: 5px;
+        }
+        
+        .waste-card {
+            margin-left: -80px;
+        }
+        
+        .foundation {
+            display: flex;
+            gap: 20px;
+        }
+        
+        /* 卡牌样式 */
+        .card {
+            width: 100px;
+            height: 150px;
+            border-radius: 8px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 2rem;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.5);
+            transition: all 0.2s;
+            position: absolute;
+            top: 0;
+            left: 0;
+        }
+        
+        .card.red {
+            background: linear-gradient(135deg, #ffffff, #ffcccc);
+            color: #cc0000;
+            border: 1px solid #ffcccc;
+        }
+        
+        .card.black {
+            background: linear-gradient(135deg, #ffffff, #cccccc);
+            color: #333333;
+            border: 1px solid #cccccc;
+        }
+        
+        .card.back {
+            background: linear-gradient(45deg, #ff0000, #800000);
+            border: 2px solid gold;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+        
+        .card.back::before {
+            content: "Solitaire";
+            color: white;
+            font-size: 0.8rem;
+            text-align: center;
+            transform: rotate(-45deg);
+            text-shadow: 0 0 5px rgba(0, 0, 0, 0.5);
+        }
+        
+        .tableau {
+            display: flex;
+            justify-content: space-between;
+            gap: 15px;
+        }
+        
+        .column {
+            display: flex;
+            flex-direction: column;
+            gap: 5px;
+            min-width: 100px;
+        }
+        
+        .pile {
+            height: 300px;
+            position: relative;
+        }
+        
+        .pile .card {
+            position: absolute;
+            top: 0;
+        }
+        
+        .pile .card:nth-child(1) { top: 0; }
+        .pile .card:nth-child(2) { top: 25px; }
+        .pile .card:nth-child(3) { top: 50px; }
+        .pile .card:nth-child(4) { top: 75px; }
+        .pile .card:nth-child(5) { top: 100px; }
+        .pile .card:nth-child(6) { top: 125px; }
+        .pile .card:nth-child(7) { top: 150px; }
+        
+        /* 推广区域 */
+        .promotion {
+            background: linear-gradient(45deg, #0a3d62, #3c6382, #0a3d62);
+            padding: 25px;
+            border-radius: 15px;
+            margin-top: 40px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 20px;
+            border: 1px solid rgba(255, 215, 0, 0.5);
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .promotion h2 {
+            color: gold;
+            font-size: 2rem;
+            text-align: center;
+        }
+        
+        .app-description {
+            text-align: center;
+            max-width: 600px;
+            line-height: 1.6;
+            font-size: 1.1rem;
+        }
+        
+        .app-logo {
+            width: 120px;
+            height: 120px;
+            background: linear-gradient(135deg, #e6d4a3, #b78a28);
+            border-radius: 25px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 4rem;
+            color: #1a3c6c;
+            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.3);
+        }
+        
+        .promo-link {
+            display: inline-block;
+            padding: 15px 35px;
+            background: linear-gradient(45deg, #00b712, #5aff15);
+            color: white;
+            font-weight: bold;
+            text-decoration: none;
+            border-radius: 50px;
+            font-size: 1.2rem;
+            transition: all 0.3s;
+            box-shadow: 0 5px 20px rgba(0, 183, 18, 0.4);
+        }
+        
+        .promo-link:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 8px 25px rgba(0, 183, 18, 0.6);
+        }
+        
+        .promo-link:active {
+            transform: translateY(0);
+        }
+        
+        .promo-link i {
+            margin-left: 10px;
+        }
+        
+        .highlight {
+            color: gold;
+            font-weight: bold;
+        }
+        
+        /* 底部样式 */
+        footer {
+            background: rgba(0, 0, 0, 0.8);
+            padding: 20px;
+            text-align: center;
+            font-size: 0.9rem;
+            border-top: 1px solid rgba(255, 215, 0, 0.5);
+        }
+        
+        .confetti {
+            position: absolute;
+            width: 10px;
+            height: 10px;
+            background-color: #f00;
+            animation: fall linear forwards;
+        }
+        
+        @keyframes fall {
+            to {
+                transform: translateY(100vh) rotate(720deg);
+                opacity: 0;
+            }
+        }
+        
+        /* 移动设备适配 */
+        @media (max-width: 768px) {
+            .top-section, .tableau {
+                flex-wrap: wrap;
+                justify-content: center;
+            }
+            
+            .controls {
+                flex-wrap: wrap;
+                justify-content: center;
+            }
+            
+            .column {
+                margin-bottom: 20px;
+            }
+            
+            .promotion {
+                margin: 20px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- 星空背景效果 -->
+    <div class="stars" id="stars"></div>
+    
+    <!-- 头部区域 -->
+    <header>
+        <h1><i class="fas fa-crown"></i> Solitaire Classic</h1>
+        <p>最受欢迎的经典纸牌游戏 - 挑战你的思维和策略</p>
+    </header>
+    
+    <!-- 游戏信息区域 -->
+    <div class="game-info">
+        <div class="stats">
+            <div><i class="fas fa-clock"></i> 时间: <span id="timer">00:00</span></div>
+            <div><i class="fas fa-sync"></i> 移动次数: <span id="moves">0</span></div>
+            <div><i class="fas fa-trophy"></i> 分数: <span id="score">100</span></div>
+        </div>
+        <div class="controls">
+            <button id="new-game"><i class="fas fa-plus-circle"></i> 新游戏</button>
+            <button id="undo"><i class="fas fa-undo"></i> 撤销</button>
+            <button id="hint"><i class="fas fa-lightbulb"></i> 提示</button>
+        </div>
+    </div>
+    
+    <!-- 游戏主区域 -->
+    <div class="game-container">
+        <div class="game-board">
+            <div class="top-section">
+                <div class="stock">
+                    <div class="card back"></div>
+                </div>
+                <div class="waste">
+                    <div class="card black">♣9</div>
+                    <div class="card red">♥J</div>
+                    <div class="card black">♠4</div>
+                </div>
+                <div class="foundation">
+                    <div class="card-slot"></div>
+                    <div class="card-slot"></div>
+                    <div class="card-slot"></div>
+                    <div class="card-slot"></div>
+                </div>
+            </div>
+            
+            <div class="tableau">
+                <div class="column">
+                    <div class="pile">
+                        <div class="card back"></div>
+                        <div class="card back"></div>
+                        <div class="card red">♥5</div>
+                    </div>
+                </div>
+                <div class="column">
+                    <div class="pile">
+                        <div class="card back"></div>
+                        <div class="card back"></div>
+                        <div class="card black">♠7</div>
+                    </div>
+                </div>
+                <div class="column">
+                    <div class="pile">
+                        <div class="card back"></div>
+                        <div class="card red">♦Q</div>
+                    </div>
+                </div>
+                <div class="column">
+                    <div class="pile">
+                        <div class="card back"></div>
+                        <div class="card black">♣2</div>
+                    </div>
+                </div>
+                <div class="column">
+                    <div class="pile">
+                        <div class="card back"></div>
+                        <div class="card red">♦10</div>
+                    </div>
+                </div>
+                <div class="column">
+                    <div class="pile">
+                        <div class="card red">♠A</div>
+                    </div>
+                </div>
+                <div class="column">
+                    <div class="pile">
+                        <div class="card back"></div>
+                        <div class="card black">♣K</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- 游戏推广区域 -->
+        <div class="promotion">
+            <div class="app-logo">
+                <i class="fas fa-cards"></i>
+            </div>
+            <h2>下载完整版 Solitaire Classic</h2>
+            <p class="app-description">
+                体验<span class="highlight">更多游戏模式</span>、<span class="highlight">精美主题</span>以及<span class="highlight">每日挑战</span>！
+                完整版本包含所有纸牌游戏变体，提供更精美的视觉效果和<span class="highlight">离线游戏支持</span>。
+                立即下载，尽享无广告的畅快游戏体验！
+            </p>
+            <a href="https://play.google.com/store/apps/details?id=com.cn.ctgames.solitaireclassic" class="promo-link" target="_blank">
+                前往Google Play下载 <i class="fab fa-google-play"></i>
+            </a>
+            <p>更多挑战等待着你！1000万+下载量，4.8 ★ 评分</p>
+        </div>
+    </div>
+    
+    <!-- 底部区域 -->
+    <footer>
+        <p>&copy; 2023 Solitaire Classic - 本游戏仅用于展示，完整游戏请下载官方应用</p>
+        <p>纸牌游戏爱好者的首选 | 锻炼思维与策略能力</p>
+    </footer>
+
+    <script>
+        // 星空背景生成
+        function createStars() {
+            const starsContainer = document.getElementById('stars');
+            const starsCount = 150;
+            
+            for (let i = 0; i < starsCount; i++) {
+                const star = document.createElement('div');
+                star.classList.add('star');
+                
+                // 随机位置
+                const x = Math.random() * 100;
+                const y = Math.random() * 100;
+                star.style.left = `${x}%`;
+                star.style.top = `${y}%`;
+                
+                // 随机大小
+                const size = Math.random() * 3;
+                star.style.width = `${size}px`;
+                star.style.height = `${size}px`;
+                
+                // 随机动画延迟
+                const delay = Math.random() * 5;
+                star.style.animationDelay = `${delay}s`;
+                
+                starsContainer.appendChild(star);
+            }
+        }
+        
+        // 计时器功能
+        function startTimer() {
+            let seconds = 0;
+            const timerElement = document.getElementById('timer');
+            
+            setInterval(() => {
+                seconds++;
+                const mins = Math.floor(seconds / 60);
+                const secs = seconds % 60;
+                timerElement.textContent = `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
+            }, 1000);
+        }
+        
+        // 创建彩纸效果
+        function createConfetti() {
+            const colors = ['#f00', '#ff0', '#0f0', '#0ff', '#00f', '#f0f'];
+            const container = document.body;
+            
+            for (let i = 0; i < 100; i++) {
+                const confetti = document.createElement('div');
+                confetti.classList.add('confetti');
+                
+                // 随机颜色
+                confetti.style.backgroundColor = colors[Math.floor(Math.random() * colors.length)];
+                
+                // 随机位置
+                confetti.style.left = `${Math.random() * 100}%`;
+                confetti.style.top = `-10px`;
+                
+                // 随机大小
+                const size = Math.random() * 10 + 5;
+                confetti.style.width = `${size}px`;
+                confetti.style.height = `${size}px`;
+                
+                // 随机动画时长
+                const duration = Math.random() * 3 + 2;
+                confetti.style.animationDuration = `${duration}s`;
+                
+                container.appendChild(confetti);
+                
+                // 动画结束后移除元素
+                setTimeout(() => {
+                    confetti.remove();
+                }, duration * 1000);
+            }
+        }
+        
+        // 按钮事件监听器
+        document.getElementById('new-game').addEventListener('click', function() {
+            // 模拟新游戏开始的效果
+            createConfetti();
+            document.getElementById('moves').textContent = '0';
+            document.getElementById('score').textContent = '100';
+            
+            // 这里可以添加新游戏逻辑
+        });
+        
+        document.getElementById('hint').addEventListener('click', function() {
+            // 模拟提示效果
+            this.innerHTML = '<i class="fas fa-lightbulb"></i> 正在搜索提示...';
+            setTimeout(() => {
+                this.innerHTML = '<i class="fas fa-lightbulb"></i> 提示';
+                alert('可以尝试将♠A移动到基础区域！');
+            }, 800);
+        });
+        
+        document.getElementById('undo').addEventListener('click', function() {
+            // 模拟撤销效果
+            this.innerHTML = '<i class="fas fa-undo"></i> 撤销中...';
+            setTimeout(() => {
+                this.innerHTML = '<i class="fas fa-undo"></i> 撤销';
+            }, 800);
+        });
+        
+        // 初始化
+        document.addEventListener('DOMContentLoaded', function() {
+            createStars();
+            startTimer();
+            
+            // 推广链接悬停效果
+            const promoLink = document.querySelector('.promo-link');
+            promoLink.addEventListener('mouseenter', () => {
+                promoLink.innerHTML = '立即下载 <i class="fab fa-google-play"></i>';
+            });
+            
+            promoLink.addEventListener('mouseleave', () => {
+                promoLink.innerHTML = '前往Google Play下载 <i class="fab fa-google-play"></i>';
+            });
+        });
+    </script>
+</body>
+</html>
